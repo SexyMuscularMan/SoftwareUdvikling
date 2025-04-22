@@ -1,6 +1,7 @@
 #include <iostream>
 
 using namespace std;
+    //kunne også have lavet en superklasse til hero og enemy hvor variabler som "name" og "damage" er under.
 class hero {
 public:
     string name;
@@ -8,7 +9,19 @@ public:
     int level;
     int hp;
     int damage;
+    int requiredxp;
 
+    void tryLevelUp(){
+        requiredxp = level*1000;
+        if (xp >= requiredxp){
+            level += 1;
+            xp = 0;
+            hp += 2;
+            damage += 1;
+            cout << endl << name << "leveled up!" << endl << name << "is now level" << level << endl;
+        }
+
+    }
 };
 class enemy{
 public:
@@ -41,16 +54,6 @@ void Battle(hero hero, enemy enemy){
             break;
         }
 
-    }
-
-    // Resultat
-    if (hero.hp <= 0) {
-        std::cout << "\n" << hero.name << " er faldet i kamp. Game over.\n";
-        break;
-    } else {
-        std::cout << "\n" << enemy.name << " defeated! You won!\n";
-        hero.xp += enemy.xpReward;
-        hero.tryLevelUp();
     }
 
 }
