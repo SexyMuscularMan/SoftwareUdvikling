@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
 using namespace std;
     //kunne også have lavet en superklasse til hero og enemy hvor variabler som "name" og "damage" er under.
 class Hero {
@@ -12,25 +13,33 @@ public:
     int requiredxp;
 
     Hero(const string& name)
-        : name(name), level(1),hp(10),damage(2), xp(0){
-        cout << "A hero named " << name << " has arrived!" <<endl;
+        : name(name), xp(0),level(1),hp(10), damage(2){
     }
 
     void tryLevelUp(){
         requiredxp = level*1000;
         if (xp >= requiredxp){
             level += 1;
-            xp = 0;
+            xp = xp-requiredxp;
             hp += 2;
             damage += 1;
             cout << endl << name << " leveled up!" << endl << name << " is now level " << level << endl;
             showStats();
         }
-
     }
+
     void showStats(){
         cout << "your stats are: " << endl << "xp: " << xp << endl
              << "level: " << level << endl << "damage: " << damage << endl;
+    }
+    void saveCharacter() {
+        ofstream file(name + ".txt", ios::out | ios::trunc);
+        if (!file.is_open()) {
+            cerr << "ERROR: could not open file for writing\n";
+            return;
+        }
+        file << level << endl << damage << endl << xp << endl << hp << endl;
+        cout << "character saved" << endl;
     }
 };
 class enemy{
@@ -70,16 +79,32 @@ bool Battle(Hero hero, enemy enemy){
 int main()
 {
     int choice;
-    string name = "lol";
+    int hp, str, lvl, xp;
+    string name;
     cout << "type '0' to load a previous character or press '1' to create a new character" << endl;
     cin >> choice;
-    if (choice == 0){
-    };
+
     if (choice == 1){
         cout << "Please enter the name of your new character!" <<endl;
         cin >> name;
     };
     Hero hero(name);
+    if (choice == 0){
+        cout << "please enter the name of the character you wish to load" <<endl;
+        cin >> name;
+        fstream file(name + ".txt");
+        string line;
+        getline(file, line);
+            file >> hp >> xp >>str >> lvl;
+
+        hero.name = name;
+        hero.damage = str;
+        hero.level = lvl;
+        hero.xp = xp;
+        hero.hp = hp;
+
+    };
+    cout << "A hero named " << hero.name << " has arrived!" <<endl;
     hero.showStats();
 
     vector<enemy> enemies = {
@@ -92,16 +117,18 @@ int main()
         {"Enhjoorning",         5, 8, 1500}
     };
     while(true){
-        cout << "do you want to save your game [0] or fight monsters? [1]" <<endl;
+        cout << "do you want to save and exit your game [0] or fight monsters? [1]" <<endl;
        // cin.ignore();
         cin >> choice;
         if (choice == 0){
-            //hero.save;
+            hero.showStats();
+            hero.saveCharacter();
             break;
         }
 
         if (choice != 1){
-            cout << "ugyldigt valg";
+            cout << "ugyldigt valg" << endl;
+            continue;
         }
 
         cout << "choose an enemy to fight!" <<endl;
@@ -124,4 +151,3 @@ int main()
 
 
 }
-
