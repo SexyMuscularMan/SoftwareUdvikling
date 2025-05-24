@@ -7,9 +7,10 @@ using namespace std;
 
 class weapon {
 public:
-    std::string name;
+    string name;
     int damage, strength, durability, price;
-    weapon(const string& name, int damage, int strength, int durability, int price);
+    weapon(const string& name, int damage, int strength, int durability, int price) :
+        name(name),damage(damage),strength(strength),durability(durability),price(price){};
 
     bool use(){
         durability -= 1;

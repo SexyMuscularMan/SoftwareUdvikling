@@ -7,14 +7,22 @@
 #include "enemy.h"
 #include "Battle.cpp"
 using namespace std;
+vector<weapon> unlockedWeapons = {{"Stick",0,2,5,100}}; //global vector
+vector<weapon> lockedWeapons = {
+    {"Knife",5,1,10,200},
+    {"Sword",10,2,10,1000},
+    {"Morningstar",10,3,20,2000},
+    {"Stormbringer",20,3,50,5000}
+};
 
+int choice;
 class Cave {
 public:
     string name;
-    int reward;
+    int reward, weaponReward;
     vector<enemy> enemies;
     Cave()
-        : name(autoName()), reward(){}
+        : name(autoName()), reward(), weaponReward(){}
 
     //add enemies to vector
     void addEnemy(enemy enemy, int number){
@@ -66,7 +74,7 @@ void fightIndividually(Hero& hero) {
     }
     cin >> choice;
     if (choice > enemies.size() || choice < 1){
-        std::cout << "Invalid choice!\n";
+        cout << "Invalid choice!\n";
         return;
     }
     cout << endl << "you have chosen to fight: " << enemies[choice-1].name << endl << "let the battle commence!" <<endl <<endl;
@@ -87,7 +95,6 @@ void enterCave(Hero& hero){
         std::cout << "Invalid choice!\n";
         enterCave(hero);
     }*/
-    cout <<endl<<endl<< hero.gold << endl <<endl;
     Cave cave;
     //switch creates enemies based on cave type and hero level
     switch(choice) {
@@ -101,6 +108,7 @@ void enterCave(Hero& hero){
         enemy strongestGoblin({"Strongest Goblin", 20,5,1000});
         cave.addEnemy(strongestGoblin,(hero.level/10)); //unlocks at level 10
         cave.reward = 200;
+        cave.weaponReward = 1;
         break;
     }
     case 2: { //spider cave
@@ -109,6 +117,7 @@ void enterCave(Hero& hero){
         enemy biggerSpider({"Tarantula",10+5*(hero.level/2), 8+(hero.level/5), 1000});
         cave.addEnemy(biggerSpider,1+(hero.level/3));
         cave.reward = 500;
+        cave.weaponReward = 2;
 
         break;
     }
@@ -120,6 +129,7 @@ void enterCave(Hero& hero){
         enemy bigskeleton({"Bone Guardian",50+10*(hero.level/2), 10+5*(hero.level/4), 4000});
         cave.addEnemy(bigskeleton,(hero.level/10));
         cave.reward = 1000;
+        cave.weaponReward = 3;
 
         break;
     }
@@ -129,6 +139,7 @@ void enterCave(Hero& hero){
         enemy dragon({"Dragon",100+20*(hero.level/5), 20+5*(hero.level/4), 10000});
         cave.addEnemy(dragon,1);
         cave.reward = 2000;
+        cave.weaponReward = 4;
         break;
     }
     default:
@@ -145,20 +156,54 @@ void enterCave(Hero& hero){
         hero.gold += cave.reward;
         cout << "You have cleared the cave!\nThe locals are ecstatic and have given you a reward of: " << cave.reward <<
                 "gold!\nYou now have: " << hero.gold <<" gold" << endl <<endl;
+        unlockedWeapons.push_back(lockedWeapons[cave.weaponReward]); //unlocks weapon based on cleared cave
     }
     else{
         return;
     }
 }
 
-void chooseWeapon(){
+void buyWeapon(Hero& hero){
+    cout << "You have entered the weaponsmith!\n";
+    /*if (unlockedWeapons.size() == 0){
+        cout << "You have not unlocked any weapons to purchase yet.\n";
+        return;
+    }*/
+    cout << "Choose a weapon to purchase: \n";
+    for (int i = 0; i < unlockedWeapons.size(); i++){
+        cout << i+1 << ": " << unlockedWeapons[i].name << ", price: " << unlockedWeapons[i].price << endl;
+    }
+    cin >> choice;
+    if (choice > unlockedWeapons.size()+3 || choice < 1){
+        cout << "Invalid choice!\n";
+        return;
+    }
+    hero.buy(unlockedWeapons[choice-1]);
+    cout << "You have purchased a " << unlockedWeapons[choice-1].name << "\nYou head back to your armory \n";
+}
+void enterArmory(Hero& hero){
+    cout << "\nYou have entered your armory...\n";
+    cout << "Your weapon stash includes:\n";
+    for (int i = 0; i < hero.weapons.size(); i++){
+        cout << i+1 << ": " << hero.weapons[i].name << endl;
+    }
+    cout << "Do you want to equip a new weapon [1] or head to the weaponsmith to buy a new weapon? [2]\n";
+    cin >> choice;
+    if (choice == 1){
+        cout << "Choose the weapon you want to equip\n";
+        cin >> choice;
+
+    }
+    if (choice == 2){
+        buyWeapon(hero);
+        enterArmory(hero);
+    }
 
 }
 void game(){
-    int choice;
     int hp, str, lvl, xp;
     string name;
-    cout << ">>>ADVENTURE GAME<<<";
+    cout << ">>>ADVENTURE GAME<<<\n";
     cout << "type '0' to load a previous character or press '1' to create a new character" << endl;
     cin >> choice;
 
@@ -180,13 +225,17 @@ void game(){
         hero.level = lvl;
         hero.xp = xp;
         hero.hp = hp;
-
     };
+    if (choice > 1 || choice < 0){
+        cout << "Invalid choice \n";
+        return;
+    }
     cout << "A hero named " << hero.name << " has arrived!" <<endl;
     hero.showStats();
-
+    weapon hands("Bare Hands", 0, 0 ,INT_MAX,0);
+    hero.weapons.push_back(hands);
     while(true){
-        cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]" <<endl;
+        cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]" <<endl;
         // cin.ignore();
         cin >> choice;
 
@@ -201,6 +250,9 @@ void game(){
         case 2:
             enterCave(hero);
             break;
+        case 3:
+            enterArmory(hero);
+            break;
         default:
             cout << "Invalid choice!\n" << endl;
         }
@@ -208,7 +260,9 @@ void game(){
 }
 int main()
 {
+    while(true){
     game();
+    }
     //Cave cave(10);
     //cout << cave.name;
 }
