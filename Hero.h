@@ -1,19 +1,18 @@
 #ifndef HERO_H
 #define HERO_H
+#include "weapon.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
+
 using namespace std;
-class Hero {     //kunne også have lavet en superklasse til hero og enemy hvor variabler som "name" og "damage" er under.
+class Hero {
 public:
     string name;
-    int xp;
-    int level;
-    int hp;
-    int damage;
-    int requiredxp;
-
+    int xp, level, hp, damage, requiredxp, gold;
+    vector<weapon> weapons;
     Hero(const string& name)
-        : name(name), xp(0),level(1),hp(10), damage(2){
+        : name(name), xp(0),level(1),hp(10), damage(2), gold(200){
     }
 
     void tryLevelUp(){
@@ -40,6 +39,18 @@ public:
         }
         file << level << endl << damage << endl << xp << endl << hp << endl;
         cout << "character saved" << endl;
+    }
+    void buy(weapon weapon){
+        if (gold > weapon.price){
+            gold -= weapon.price;
+            weapons.push_back(weapon);
+        }
+        else{
+            cout << "You don't have enough gold to purchase this weapon, get your money up brokie!\n";
+        }
+    }
+    int calculateDamage(weapon weapon){
+        return weapon.damage + damage * weapon.strength;
     }
 };
 #endif // HERO_H
