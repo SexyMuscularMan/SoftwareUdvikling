@@ -6,8 +6,8 @@ bool Battle(Hero hero, enemy enemy){
     cout << "you encounter a " << enemy.name << endl;
     sleep(1);
     while (true) {
-        enemy.hp -= hero.damage;
-        cout << "You damage the " << enemy.name << " for " << hero.damage <<" hp!\n";
+        enemy.hp -= hero.calculateDamage();
+        cout << "You damage the " << enemy.name << " for " << hero.calculateDamage() <<" hp!\n";
         cout << enemy.name << " has " << enemy.hp << " hp remaining" << endl;
         sleep(1);
         if (enemy.hp <= 0) {
@@ -19,7 +19,7 @@ bool Battle(Hero hero, enemy enemy){
         cout << enemy.name << " damages you for " << enemy.damage << " hp!\n";
         cout << hero.name  << " has " << hero.hp  << " hp remaining" << endl;
         if (hero.hp <= 0){
-            cout << hero.name << " has fallen in battle and must retreat." << endl;
+            cout << hero.name << " has fallen in battle and must retreat." << endl << endl;
             return 0;
             break;
         }

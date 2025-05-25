@@ -14,7 +14,6 @@ vector<weapon> lockedWeapons = {
     {"Morningstar",10,3,20,2000},
     {"Stormbringer",20,3,50,5000}
 };
-
 int choice;
 class Cave {
 public:
@@ -49,6 +48,7 @@ public:
             if(Battle(hero, enemies[i])){
                 hero.xp += enemies[i].xpReward;
                 hero.tryLevelUp();
+                cout << "Press enter to continue\n";
             }
             else{
                 return false;
@@ -143,7 +143,7 @@ void enterCave(Hero& hero){
         break;
     }
     default:
-        std::cout << "Invalid choice!\n";
+        cout << "Invalid choice!\n";
         return;
     }
     cout << "You head towards the cave known by locals as: " << cave.name << endl;
@@ -174,8 +174,10 @@ void buyWeapon(Hero& hero){
         cout << i+1 << ": " << unlockedWeapons[i].name << ", price: " << unlockedWeapons[i].price << endl;
     }
     cin >> choice;
-    if (choice > unlockedWeapons.size()+3 || choice < 1){
+    if (!cin ||choice > unlockedWeapons.size()+3 || choice < 1){
         cout << "Invalid choice!\n";
+        cout.clear();
+        cin.ignore();
         return;
     }
     hero.buy(unlockedWeapons[choice-1]);
@@ -190,29 +192,37 @@ void enterArmory(Hero& hero){
     cout << "Do you want to equip a new weapon [1] or head to the weaponsmith to buy a new weapon? [2]\n";
     cin >> choice;
     if (choice == 1){
-        cout << "Choose the weapon you want to equip\n";
+        cout << "Choose the weapon you want to equip by number\n";
         cin >> choice;
-
+        hero.usedWeapon = hero.weapons[choice-1];
+        cout << "You have equipped a " << hero.weapons[choice-1].name << endl;
+        return;
     }
     if (choice == 2){
         buyWeapon(hero);
         enterArmory(hero);
     }
-
+    if (!cin || choice > 2 || choice < 0){
+        cout << "Invalid choice \n";
+        cin.clear();
+        cin.ignore();
+        enterArmory(hero);
+    }
 }
 void game(){
     int hp, str, lvl, xp;
     string name;
-    cout << ">>>ADVENTURE GAME<<<\n";
-    cout << "type '0' to load a previous character or press '1' to create a new character" << endl;
+    cout << ">>>ADVENTURE GAME WOOOOO<<<\n";
+    cout << "type '1' to load a previous character or press '2' to create a new character" << endl;
     cin >> choice;
 
-    if (choice == 1){
+    if (choice == 2){
         cout << "Please enter the name of your new character!" <<endl;
         cin >> name;
     };
     Hero hero(name);
-    if (choice == 0){
+
+    if (choice == 1){
         cout << "please enter the name of the character you wish to load" <<endl;
         cin >> name;
         fstream file(name + ".txt");
@@ -226,17 +236,16 @@ void game(){
         hero.xp = xp;
         hero.hp = hp;
     };
-    if (choice > 1 || choice < 0){
+    if (!cin || choice > 2 || choice < 1){ //checks for over and under number wise and also if not an int
         cout << "Invalid choice \n";
+        cin.clear();
+        cin.ignore();
         return;
     }
     cout << "A hero named " << hero.name << " has arrived!" <<endl;
     hero.showStats();
-    weapon hands("Bare Hands", 0, 0 ,INT_MAX,0);
-    hero.weapons.push_back(hands);
     while(true){
         cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]" <<endl;
-        // cin.ignore();
         cin >> choice;
 
         switch(choice){

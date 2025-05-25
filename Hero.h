@@ -4,16 +4,15 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
 using namespace std;
 class Hero {
 public:
     string name;
     int xp, level, hp, damage, requiredxp, gold;
-    vector<weapon> weapons;
+    vector<weapon> weapons = {weapon("Bare Hands", 0, 0 ,INT_MAX,0)};
+    weapon usedWeapon;
     Hero(const string& name)
-        : name(name), xp(0),level(1),hp(10), damage(2), gold(200){
-    }
+        : name(name), xp(0),level(1),hp(10), damage(2), gold(200), usedWeapon(weapon("Bare Hands", 0, 0 ,INT_MAX,0)){}
 
     void tryLevelUp(){
         requiredxp = level*1000;
@@ -26,7 +25,6 @@ public:
             showStats();
         }
     }
-
     void showStats(){
         cout << "your stats are: " << endl << "xp: " << xp << endl
              << "level: " << level << endl << "damage: " << damage << endl;
@@ -49,8 +47,11 @@ public:
             cout << "You don't have enough gold to purchase this weapon, get your money up brokie!\n";
         }
     }
-    int calculateDamage(weapon weapon){
-        return weapon.damage + damage * weapon.strength;
+    int calculateDamage(){
+        if (usedWeapon.use()){
+            usedWeapon = weapons[0];
+        }
+        return usedWeapon.damage + damage * usedWeapon.strength;
     }
 };
 #endif // HERO_H
