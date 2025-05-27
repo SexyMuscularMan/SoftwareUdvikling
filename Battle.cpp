@@ -12,6 +12,7 @@ bool Battle(Hero hero, enemy enemy){
         sleep(1);
         if (enemy.hp <= 0) {
             cout << enemy.name << " defeated! You won!" << endl << "you have gained: " << enemy.xpReward << "xp!" <<endl;
+            hero.kills++;
             return 1;
             break;
         }

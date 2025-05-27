@@ -6,9 +6,10 @@
 #include <unistd.h>  // For sleep()
 #include "enemy.h"
 #include "Battle.cpp"
+#include "databaseManager.cpp"
+
 using namespace std;
-vector<weapon> unlockedWeapons = {{"Stick",0,2,5,100}}; //global vector
-vector<weapon> lockedWeapons = {
+vector<weapon> lockedWeapons = { //global vector
     {"Knife",5,1,10,200},
     {"Sword",10,2,10,1000},
     {"Morningstar",10,3,20,2000},
@@ -108,7 +109,7 @@ void enterCave(Hero& hero){
         enemy strongestGoblin({"Strongest Goblin", 20,5,1000});
         cave.addEnemy(strongestGoblin,(hero.level/10)); //unlocks at level 10
         cave.reward = 200;
-        cave.weaponReward = 1;
+        cave.weaponReward = 0;
         break;
     }
     case 2: { //spider cave
@@ -117,7 +118,7 @@ void enterCave(Hero& hero){
         enemy biggerSpider({"Tarantula",10+5*(hero.level/2), 8+(hero.level/5), 1000});
         cave.addEnemy(biggerSpider,1+(hero.level/3));
         cave.reward = 500;
-        cave.weaponReward = 2;
+        cave.weaponReward = 1;
 
         break;
     }
@@ -129,7 +130,7 @@ void enterCave(Hero& hero){
         enemy bigskeleton({"Bone Guardian",50+10*(hero.level/2), 10+5*(hero.level/4), 4000});
         cave.addEnemy(bigskeleton,(hero.level/10));
         cave.reward = 1000;
-        cave.weaponReward = 3;
+        cave.weaponReward = 2;
 
         break;
     }
@@ -139,7 +140,7 @@ void enterCave(Hero& hero){
         enemy dragon({"Dragon",100+20*(hero.level/5), 20+5*(hero.level/4), 10000});
         cave.addEnemy(dragon,1);
         cave.reward = 2000;
-        cave.weaponReward = 4;
+        cave.weaponReward = 3;
         break;
     }
     default:
@@ -155,8 +156,9 @@ void enterCave(Hero& hero){
     if(cave.enterCave(hero)){
         hero.gold += cave.reward;
         cout << "You have cleared the cave!\nThe locals are ecstatic and have given you a reward of: " << cave.reward <<
-                "gold!\nYou now have: " << hero.gold <<" gold" << endl <<endl;
-        unlockedWeapons.push_back(lockedWeapons[cave.weaponReward]); //unlocks weapon based on cleared cave
+                "gold!\nYou now have: " << hero.gold <<" gold" << endl;
+        hero.unlockedWeapons.push_back(lockedWeapons[cave.weaponReward]); //unlocks weapon based on cleared cave
+        cout << "You've unlocked the " << lockedWeapons[cave.weaponReward].name <<endl << endl;
     }
     else{
         return;
@@ -170,18 +172,18 @@ void buyWeapon(Hero& hero){
         return;
     }*/
     cout << "Choose a weapon to purchase: \n";
-    for (int i = 0; i < unlockedWeapons.size(); i++){
-        cout << i+1 << ": " << unlockedWeapons[i].name << ", price: " << unlockedWeapons[i].price << endl;
+    for (int i = 0; i < hero.unlockedWeapons.size(); i++){
+        cout << i+1 << ": " << hero.unlockedWeapons[i].name << ", price: " << hero.unlockedWeapons[i].price << endl;
     }
     cin >> choice;
-    if (!cin ||choice > unlockedWeapons.size()+3 || choice < 1){
+    if (!cin ||choice > hero.unlockedWeapons.size()+3 || choice < 1){
         cout << "Invalid choice!\n";
         cout.clear();
         cin.ignore();
         return;
     }
-    hero.buy(unlockedWeapons[choice-1]);
-    cout << "You have purchased a " << unlockedWeapons[choice-1].name << "\nYou head back to your armory \n";
+    hero.buy(hero.unlockedWeapons[choice-1]);
+    cout << "You have purchased a " << hero.unlockedWeapons[choice-1].name << "\nYou head back to your armory \n";
 }
 void enterArmory(Hero& hero){
     cout << "\nYou have entered your armory...\n";
@@ -209,8 +211,8 @@ void enterArmory(Hero& hero){
         enterArmory(hero);
     }
 }
-void game(){
-    int hp, str, lvl, xp;
+void game(QSqlDatabase db){
+    cin.clear();
     string name;
     cout << ">>>ADVENTURE GAME WOOOOO<<<\n";
     cout << "type '1' to load a previous character or press '2' to create a new character" << endl;
@@ -223,18 +225,18 @@ void game(){
     Hero hero(name);
 
     if (choice == 1){
-        cout << "please enter the name of the character you wish to load" <<endl;
-        cin >> name;
-        fstream file(name + ".txt");
-        string line;
-        getline(file, line);
-        file >> hp >> xp >>str >> lvl;
+        cout << "Selects the character you want to load: " <<endl;
 
-        hero.name = name;
-        hero.damage = str;
-        hero.level = lvl;
-        hero.xp = xp;
-        hero.hp = hp;
+        QSqlQuery q(db);
+        q.exec("SELECT id, name, level FROM Heroes ORDER BY id");
+        while(q.next()){
+            cout << q.value(0).toInt() << ": " << q.value(1).toString().toStdString() << " level: " << q.value(2).toInt() << endl;
+        }
+        cin >> choice;
+        if (!loadHero(hero, db, choice)){
+            cout << "\nFailed to load hero\n";
+            return;
+        }
     };
     if (!cin || choice > 2 || choice < 1){ //checks for over and under number wise and also if not an int
         cout << "Invalid choice \n";
@@ -245,13 +247,15 @@ void game(){
     cout << "A hero named " << hero.name << " has arrived!" <<endl;
     hero.showStats();
     while(true){
-        cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]" <<endl;
+        cin.clear();
+        cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]\nSee your stats [4]" <<endl;
         cin >> choice;
 
         switch(choice){
         case 0:
             hero.showStats();
-            hero.saveCharacter();
+            saveCharacter(hero, db);
+            saveWeapons(hero, db);
             return;
         case 1:
             fightIndividually(hero);
@@ -262,15 +266,28 @@ void game(){
         case 3:
             enterArmory(hero);
             break;
+        case 4:
+            hero.showStats();
+            break;
         default:
             cout << "Invalid choice!\n" << endl;
         }
     }
 }
-int main()
+int main(int argc, char *argv[])
 {
+    //database setup
+    QCoreApplication app(argc, argv);
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("game.db");
+
+    if (!db.open()) {
+        qCritical() << "DB open error:" << db.lastError().text();
+        return false;
+    }
+
     while(true){
-    game();
+    game(db);
     }
     //Cave cave(10);
     //cout << cave.name;
