@@ -8,9 +8,9 @@ using namespace std;
 class weapon {
 public:
     string name;
-    int damage, strength, durability, price;
-    weapon(const string& name, int damage, int strength, int durability, int price) :
-        name(name),damage(damage),strength(strength),durability(durability),price(price){};
+    int damage, strength, durability, price, kills;
+    weapon(const string& name, int damage, int strength, int durability, int kills, int price) :
+        name(name),damage(damage),strength(strength),durability(durability), price(price),kills(kills){};
 
     bool use(){
         durability -= 1;
@@ -22,5 +22,8 @@ public:
             return 0;
         }
     };
+    ~weapon() {
+    }
+
 };
 #endif // WEAPON_H

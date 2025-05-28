@@ -1,6 +1,7 @@
 #include "Hero.h"
 #include "qdir.h"
 #include "weapon.h"
+#include <vector>
 #include <QCoreApplication>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -41,20 +42,21 @@ bool saveWeapons(const Hero& h, QSqlDatabase &db) {
     q1.finish();
 
     //insert every weapon hero has into db
-    if (h.weapons.size() < 1) {return true;};
+    if (h.weapons.size() < 2) {return true;};
     for(int w = 1; w < h.weapons.size(); w++){
         QSqlQuery q(db);
         q.prepare(R"(
         INSERT OR REPLACE INTO weapons
-          (name, heroID, damage, strength, durability, price)
+          (name, heroID, damage, strength, durability, kills, price)
         VALUES
-          (:name, :heroID, :damage, :strength, :durability, :price)
+          (:name, :heroID, :damage, :strength, :durability, :kills, :price)
       )");
         q.bindValue(":name", QString::fromStdString(h.weapons[w].name));
         q.bindValue(":heroID", HeroId);
         q.bindValue(":damage", h.weapons[w].damage);
         q.bindValue(":strength", h.weapons[w].strength);
         q.bindValue(":durability", h.weapons[w].durability);
+        q.bindValue(":kills", h.weapons[w].kills);
         q.bindValue(":price", h.weapons[w].price);
         if (!q.exec()){
             qWarning() << "saveWeapon failed:" << q.lastError().text();
@@ -66,13 +68,6 @@ bool saveWeapons(const Hero& h, QSqlDatabase &db) {
 }
 
 bool loadHero(Hero& h, QSqlDatabase &db, int choice) {
-
-    vector<weapon> lockedWeapons = { //to add to unlockedWeapons vector
-        {"Knife",5,1,10,200},
-        {"Sword",10,2,10,1000},
-        {"Morningstar",10,3,20,2000},
-        {"Stormbringer",20,3,50,5000}
-    };
 
     QSqlQuery q(db);
     q.prepare(R"(
@@ -97,30 +92,22 @@ bool loadHero(Hero& h, QSqlDatabase &db, int choice) {
     //unlock weapons
     int unlock = q.value(8).toInt()-1;
     for (int i = 0; i < unlock; i++){
-        h.unlockedWeapons.push_back(lockedWeapons[i]);
+        h.unlockedWeapons.push_back(h.lockedWeapons[i]);
     }
 
     //load weapons
+    //QSqlQuery q1(db);
     q.finish();
     q.prepare(R"(
-        SELECT name, damage, strength, durability, price
+        SELECT name, damage, strength, durability, kills, price
         FROM weapons
         WHERE heroID = :choice
 )");
     q.bindValue(":choice", choice);
+    q.exec();
     while (q.next()) {
-        h.weapons.push_back({q.value(0).toString().toStdString(),q.value(1).toInt(),q.value(2).toInt(),q.value(3).toInt(),q.value(4).toInt()});    }
+        h.weapons.push_back({q.value(0).toString().toStdString(),q.value(1).toInt(),q.value(2).toInt(),q.value(3).toInt(),q.value(4).toInt(),q.value(5).toInt()});
+    }
+    cout << "\nHero succesfully loaded\n";
     return true;
-}
-void logCombat(const Hero& h, const QString& weaponName)
-{
-    QSqlQuery q;
-    q.prepare(R"(
-    INSERT INTO combat_log (hero, enemy, cave, weapon)
-    VALUES (:h, :e, :c, :w)
-  )");
-    q.bindValue(":h", QString::fromStdString(h.name));
-    q.bindValue(":w", weaponName);
-    if (!q.exec())
-        qWarning() << "logCombat failed:" << q.lastError().text();
 }

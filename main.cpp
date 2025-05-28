@@ -7,15 +7,10 @@
 #include "enemy.h"
 #include "Battle.cpp"
 #include "databaseManager.cpp"
+#include "Analytics.cpp"
 
 using namespace std;
-vector<weapon> lockedWeapons = { //global vector
-    {"Knife",5,1,10,200},
-    {"Sword",10,2,10,1000},
-    {"Morningstar",10,3,20,2000},
-    {"Stormbringer",20,3,50,5000}
-};
-int choice;
+uint choice;
 class Cave {
 public:
     string name;
@@ -27,7 +22,7 @@ public:
     //add enemies to vector
     void addEnemy(enemy enemy, int number){
         for (int i = 0; i < number; i++){
-        enemies.push_back(enemy);
+            enemies.push_back(enemy);
         }
     }
 
@@ -40,9 +35,9 @@ public:
 
     void showEnemies(){
         cout << "Locals say the cave contains: \n";
-         for(int i = 0; i < enemies.size(); i++){
-             cout <<"a " << enemies[i].name << endl;
-         }
+        for(int i = 0; i < enemies.size(); i++){
+            cout <<"a " << enemies[i].name << endl;
+        }
     }
     bool enterCave(Hero& hero){
         for (int i = 0; i < enemies.size(); i++){
@@ -91,11 +86,7 @@ void enterCave(Hero& hero){
     int choice;
     cout << "Choose to enter one of the following caves:\n1: goblin cave [easy]\n2: spider cave [medium]\n3: skeleton cave [hard]\n4: dragon cave [hardest]\n";
     cin >> choice;
-    /*
-    if (choice > 4 || choice < 1){
-        std::cout << "Invalid choice!\n";
-        enterCave(hero);
-    }*/
+
     Cave cave;
     //switch creates enemies based on cave type and hero level
     switch(choice) {
@@ -152,13 +143,17 @@ void enterCave(Hero& hero){
     cave.showEnemies();
     sleep(2);
     cout << "You enter the cave...\n";
-    sleep(3);
+    sleep(2);
     if(cave.enterCave(hero)){
         hero.gold += cave.reward;
         cout << "You have cleared the cave!\nThe locals are ecstatic and have given you a reward of: " << cave.reward <<
                 "gold!\nYou now have: " << hero.gold <<" gold" << endl;
-        hero.unlockedWeapons.push_back(lockedWeapons[cave.weaponReward]); //unlocks weapon based on cleared cave
-        cout << "You've unlocked the " << lockedWeapons[cave.weaponReward].name <<endl << endl;
+
+        //unlocks weapon based on cleared cave (only if first time clearing)
+        if (hero.unlockedWeapons.size() < cave.weaponReward+2){
+            hero.unlockedWeapons.push_back(hero.lockedWeapons[cave.weaponReward]);
+            cout << "You've unlocked the " << hero.lockedWeapons[cave.weaponReward].name <<"!"<<endl << endl;
+        }
     }
     else{
         return;
@@ -196,28 +191,50 @@ void enterArmory(Hero& hero){
     if (choice == 1){
         cout << "Choose the weapon you want to equip by number\n";
         cin >> choice;
+        if ((choice > hero.weapons.size()+1) || !cin) {choice = 1;} //if above limit do bare hands
+
+        if (!(hero.usedWeapon.durability > 100)){ //put weapon back in storage unless bare hands
+            hero.weapons.push_back(hero.usedWeapon);
+        }
+
         hero.usedWeapon = hero.weapons[choice-1];
+
+        if(choice != 1){ //remove from weapons vector if not bare hands
+            hero.weapons.erase(hero.weapons.begin()+choice-1);
+        }
         cout << "You have equipped a " << hero.weapons[choice-1].name << endl;
         return;
     }
     if (choice == 2){
         buyWeapon(hero);
         enterArmory(hero);
+        return;
     }
-    if (!cin || choice > 2 || choice < 0){
+    if (!cin || choice > 2){
         cout << "Invalid choice \n";
         cin.clear();
         cin.ignore();
         enterArmory(hero);
     }
 }
+
 void game(QSqlDatabase db){
     cin.clear();
     string name;
     cout << ">>>ADVENTURE GAME WOOOOO<<<\n";
-    cout << "type '1' to load a previous character or press '2' to create a new character" << endl;
+    cout << "Enter [1] to load a previous character \nEnter [2] to create a new character\nEnter [3] to view analytics of previous characters\n" << endl;
     cin >> choice;
 
+    if (!cin || choice > 3 || choice < 1){ //checks for over and under number wise and also if not an int
+        cout << "Invalid choice \n";
+        cin.clear();
+        cin.ignore();
+        return;
+    }
+    if (choice == 3){
+        Analytics(db);
+        return;
+    };
     if (choice == 2){
         cout << "Please enter the name of your new character!" <<endl;
         cin >> name;
@@ -226,7 +243,6 @@ void game(QSqlDatabase db){
 
     if (choice == 1){
         cout << "Selects the character you want to load: " <<endl;
-
         QSqlQuery q(db);
         q.exec("SELECT id, name, level FROM Heroes ORDER BY id");
         while(q.next()){
@@ -238,22 +254,19 @@ void game(QSqlDatabase db){
             return;
         }
     };
-    if (!cin || choice > 2 || choice < 1){ //checks for over and under number wise and also if not an int
-        cout << "Invalid choice \n";
-        cin.clear();
-        cin.ignore();
-        return;
-    }
     cout << "A hero named " << hero.name << " has arrived!" <<endl;
+    sleep(1);
     hero.showStats();
+    sleep(1);
     while(true){
         cin.clear();
-        cout << "do you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]\nSee your stats [4]" <<endl;
+        cout << "\nDo you want to save and exit your game [0]\nfight monsters individually? [1]\nenter a cave and fight many monsters? [2]\nEnter your armory [3]\nSee your stats [4]" <<endl;
         cin >> choice;
 
         switch(choice){
         case 0:
             hero.showStats();
+            hero.weapons.push_back(hero.usedWeapon);
             saveCharacter(hero, db);
             saveWeapons(hero, db);
             return;
@@ -267,6 +280,7 @@ void game(QSqlDatabase db){
             enterArmory(hero);
             break;
         case 4:
+            cout << endl;
             hero.showStats();
             break;
         default:
