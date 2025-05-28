@@ -1,0 +1,20 @@
+
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS Heroes (
+  name TEXT PRIMARY KEY,
+  xp INTEGER NOT NULL,
+  level INTEGER NOT NULL,
+  hp INTEGER NOT NULL,
+  damage INTEGER NOT NULL,
+  requiredxp INTEGER NOT NULL,
+  gold INTEGER NOT NULL,
+  kills INTEGER NOT NULL,
+  weapons INTEGER 
+); 
+
+CREATE TABLE IF NOT EXISTS combat_log (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    hero      TEXT    NOT NULL REFERENCES heroes(name),
+    weapon    TEXT    NOT NULL
+);
