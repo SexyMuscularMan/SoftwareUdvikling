@@ -1,0 +1,59 @@
+commit 5f6c0d223a71b62185243b8a052d5ec062c5ccfc
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Fri May 16 16:03:50 2025 +0200
+
+    version 1.0
+
+commit 979af78c6f9a5c4d37051da82bf89c4f6b750448
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Fri May 16 16:02:47 2025 +0200
+
+    Add files via upload
+
+commit 0021643d517e54d27a2c23c6139a34c3bd10fb3f
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Thu Apr 24 19:02:39 2025 +0200
+
+    version 1.0.0
+
+commit 8bba5915b112df99f4c4e6442d2d189ea2143d28
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Thu Apr 24 15:56:38 2025 +0200
+
+    version 0.4
+
+commit 9686018cf8bdbd04b5333b761639505ac3d97e69
+Merge: c6aeb10 121a483
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Tue Apr 22 11:46:30 2025 +0200
+
+    Merge pull request #2 from SexyMuscularMan/develop
+
+    version 0.3.0
+
+commit 121a483efae8a00897193e3b9724edb3a809e428
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Tue Apr 22 11:45:23 2025 +0200
+
+    version 0.3.0
+
+commit c6aeb10362494f763a2c45bb5b28ef489e6cace8
+Merge: 4735471 147d57a
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Tue Apr 22 11:16:36 2025 +0200
+
+    Merge pull request #1 from SexyMuscularMan/develop
+
+    version 0.2.0
+
+commit 147d57a80713d2370762a04feb75b1de0d1f4675
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Tue Apr 22 11:15:50 2025 +0200
+
+    version 0.2.0
+
+commit 4735471ac5f1f29c8c346e14744ba818bc5cec51
+Author: SexyMuscularMan <123540710+SexyMuscularMan@users.noreply.github.com>
+Date:   Tue Apr 22 10:06:07 2025 +0200
+
+    version 0.1
