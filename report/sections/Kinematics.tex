@@ -1,0 +1,33 @@
+From the calculation of the projectile trajectory a velocity vector at the release point is found. Based on the release point and velocity vector an inverse kinematic solution with the required joint angles and velocities was calculated in MATLAB \cite{matlab2024b} using the Robotics Systems Toolbox \cite{roboticsToolbox}. From this a trajectory for the throw and recovery motion was calculated. However, there are safety limits implemented on the robot which need to be accounted for (table~\ref{tab:jointLimits},~\ref{tab:tcpLimits}).  
+
+\begin{table}[H]
+  \centering
+  \caption{Security limits for each joint (deg)}
+  \label{tab:jointLimits}
+  \begin{tabular}{|c|c|c|}
+    \hline
+    Joint & Lower limit (deg) & Upper limit (deg) \\ \hline
+    1 & -160 & 25 \\
+    2 & -180 & 0 \\
+    3 & -145 & 0 \\
+    4 & -100 & 90 \\
+    5 & 65   & 105 \\
+    6 & -363 & 363 \\ \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Security limits for the TCP in the world frame (mm)}
+  \label{tab:tcpLimits}
+  \begin{tabular}{|l|c|}
+    \hline
+    Plane in world frame & Limit (mm) \\ \hline
+    Lower X & -53.8 \\
+    Lower Y & 231.1 \\
+    Upper Y & 701.4 \\
+    Lower Z & 189.7 \\ \hline
+  \end{tabular}
+\end{table}
+
+A “rigidbodytree” object \cite{rigidBodyTree} was created based on the URDF file “ur5.urdf”, which is included in the project folder. This file includes the entire robot up to the tcp and the world to base transformation. Therefore, the cartesian coordinates do not need to be manually transformed from the world frame to the base frame. A numerical solver was implemented for the rigidbodytree to calculate the joint angles based on the tcp transform. Due to the joint space limits the “generalizedinversekinematics” class was used as it allows for the specification of joint limits for the inverse kinematics solution \cite{generalizedIK}. The positional part of the tcp transformation was the release position vector. The release positions were defined to have the x-coordinate of 0.85, the same y-coordinate as the target position and the z-coordinate of 0.235. these coordinates were decided by trial and error. For the orientational part of the tcp transformation, the z-axis was defined to point down towards the table, the y-axis to point along the velocity vector in x and y plane and finally the orientation of the x-axis was defined to from a right-hand coordinate system \cite{rightHandRule}. For the calculated joint angles, the forward kinematics solution was calculated and compared to the original tcp transformation to detect a potential kinematic error. Moreover, the geometric Jacobian matrix was calculated to check for a potential singularity by checking its rank \cite{kinematicsLecture10}. A function was therefore implemented that throws an error in case of either a singularity, a joint limit violation or a cartesian limit violation. The linear part of the Jacobian was then used to calculate the joint velocities at the release point from the linear tcp velocity vector \cite{kinematicsLecture10}. The resulting joint angles and velocities were then used to calculate a throw trajectory for the robot arm from a start point to the release point and a recovery trajectory to decelerate from the release point to an end point. The trajectories were designed as cubic polynomials using MATLAB’s “cubicpolytraj” \cite{cubicPolyTraj} to specify both start and end positions and velocities \cite{kinematicsLecture9}. Both the starting point and end point were chosen to be at the middle point between all joint limits. Like the release points these points were chosen by trial and error to allow for kinematic solutions for a wider range of target points. The velocity constraints were 0 rad/s for all joints at the start of the throw trajectory and end of the recovery trajectory. The calculated joint velocities at the release point were defined as end constraints for the throw trajectory and start constraints of the recovery trajectory. This means for the throw the robot will move from to the middle point of the joint limits to the release point, where it will have reached the calculated joint velocities and after it threw to ball it will return to back to the starting point to decelerate. The time for both the throw trajectory and recovery trajectory was defined to be 1 second each by trial and error. The time steps for both trajectories were chosen to be 0.008 seconds to match the robots control loop frequency of 125 Hz \cite{controlFrequency}. At each step of the trajectories a check for singularities and limits was performed. Finally, the joint angles and velocities at each time step were written to text files to be read by the main program. 

@@ -1,0 +1,14 @@
+\label{sec:Abstract}
+
+In this project, software has been developed to automate the process of picking up and throwing a ball using a "Universal robotics" (UR) arm
+For the purpose of demonstrating a UR arm, combined with a camera can be utilized for performing coordinated actions.
+the minimum acceptable threshold for success is picking up a ball with a pair of grippers, and throwing it at a defined target. 
+Before doing so, the event needs to be simulated to validate the robot kinematics and throwing trajectory, before physically executing the action.
+The software integrates object detection through a camera, a trajectory calculation and robot control into a single framework.
+
+The software is compatible with a "Universal Robots - UR5" robot arm, combined with a "WEISS ROBOTICS" GCL GRipper and
+a camera "Basler acA 1440-220uc". The software is written in C++ with usage from a large variraty of libraries, compiled on a personal computer.
+The trajectory calculation and robot kinematics for the throw is done through "Matlab", the camera vision detection depends on the library "OpenCV", 
+the robotics control is largly dependend on the library "UR RTDE" and the simulation is also created through "Matlab".
+Other items for the project, such as the ball and basket has been made using CAD tools and 3D printed in PLA material.
+The softare acts as hub for combining all the different factors, giving full coordination and overview on the different components for a functional robotic throwing system.

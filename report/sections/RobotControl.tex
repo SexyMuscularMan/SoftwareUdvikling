@@ -1,0 +1,72 @@
+ \label{sec:RobotControl}
+
+Being able to control and move our robot and gripper is imperative to the success of our project as our goal of throwing an object relies on our ability to pick said object up and move it in a desired path.
+\subsection{Gripper Control}
+Our supplied gripper, the Weiss Robotics WSG50, allows us to pick up and throw our ball by enclosing it's fingers and opening them up again when appropriate.
+To connect to the gripper, we set up a tcp connection to the grippers IP and port which allows us to send it commands.
+We use these commands to open and close our gripper when appropriate at a speed of 420 mm/s which is the maximum speed the gripper can operate at.
+%skrive om TCP kommunikation og hvordan vi får svar fra gripperen måske nævn testen hurtigt
+
+\subsection{Robot Control}
+Using the library UR\_RTDE, we are able to connect to and control our UR5 robot directly from our program.
+This library allows us to send commands to the robot in real time without having to make our own URscript code.
+
+The two classes we mainly use from this library is the RTDEControlInterface and RTDEReceiveInterface classes.
+The RTDEControlInterface class allows us to send commands to the robot such as moving it to a specific position and setting its speed.
+
+There are several motion types for our robot and different situations where it is appropriate to use each.
+\begin{itemize}
+    \item MoveL
+    \linebreak- Used to move in straight cartesian paths which could be useful for picking up our ball initially as it could prevent unnecessary collisions with our ball or environment.
+    \item MoveJ
+    \linebreak- MoveJ moves the robot through joint-space allowing the robot to reach it's position in the most efficient manner possible. Could be used to move the robot in a throwing motion.
+    \item ServoJ
+    \linebreak- ServoJ, like moveJ, moves linearly in joint-space. ServoJ however allows us better control over the robot's trajectory as it is better suited for continous smaller movement like we would receive from our MATLAB script. ServoJ will not stop or slow down until it stops receiving new commands which is why it is better suited for our throwing motion.
+\end{itemize}
+The RTDEReceiveInterface class allows us to receive data from the robot such as its current position both in joint space and cartesian space which we mainly use for troubleshooting.
+
+
+Using the function, setTargetPayload we are also able to alter the payload of the robot to offset the added weight of the ball, however since the ball weighs so little, the difference would be negligible and we therefore decided not to implement this. %måske skriv om hvad det betyder for robottens bevægelse
+\subsection{Implementation}
+Picking up the ball requires a combination of moving both the robot and gripper.
+\subsubsection{Picking up the ball}
+First, we receive the position of the ball in world coordinates from the vision system as well as the location of our container. %skal måske uddybes mere hvis det ikke er i vision delen
+%these coordinates are then converted to a $4\times4$ transformation matrix based on our calibrated frame and is then flipped around the Y-axis to ensure the tool is facing downwards.
+To avoid collisions, the robot first moves to a position directly above the detected ball using a fixed height.
+Once above the ball, a command is sent to the gripper to open its fingers at the predefined speed.
+The robot then moves directly down to the ball's position using moveL function which ensures a straight line movement in cartesian space.
+Another command is sent to the gripper to close its fingers to pick up the ball and return to it's previous position using moveL.
+
+\subsubsection{throwBall}
+To throw the ball, the function only requires the coordinates it should throw to. It takes base coordinates and transfer them to world coordinates, because when we started developing, all was in the robots perspektive. So everything began in base coordinates.
+The function will delete one of the files we use to transfer vectors, from matlab to c++(timeVector.txt). This is to make sure we do not repeat an old move, if the new one should fail.
+The time it takes to run the matlab script is really annoying, but it is what happens next. It is only then we can throw the ball, so that means we are up for quite a delay.
+
+To make sure we can get the highest priority on all systems, we have choosen to the actually throw in a thread. So if the matlab script run successfully, we will launch a qthread and give it highest priority, so we avoid any lag in the throw.
+There is no special reason why we used Qthread over std::thread here with lambda. Either could have done it. 
+It is a Qt class and it is properly the right reason to do use qThread over std::thread, but the real reason is more that it was cool to try like this with lambda instead of a function.
+
+To do the throw, we are using two different commands:
+\begin{itemize}
+    \item moveInVectorPosWithRecoveryAndRelease(accelerationPositionsVector, deaccelerationsPositionsVector, timeStep)
+    \linebreak- This function will use servoJ to move between iterations in q positions with steps in time given by timeStep. DeaccelerationsPositionsVector has been disabled due to throw being hard to measure if incorrect.
+    \item moveInVectorSpeedWithRecoveryAndRelease(accelerationPositionsVector, accelerationSpeedVector, deaccelerationsSpeedVector, timeStep)
+    \linebreak- This function will use speedJ to move between iterations in q speed with steps in time given by timeStep. DeaccelerationsPositionsVector has been disabled due to throw being hard to measure if incorrect.
+    This function also uses the position to detect if it is off target and to try correcting the issue through the move.
+\end{itemize}
+
+We will show the test further down however to give a resume, speedJ gives us the most flowing motions, but is off target. - And throw is inconsistent. 
+This is due to trajectories changing the course very rapidly and us overshooting a bit everytime and it building up. 
+We have done some effort to get it on target by alternating the course a bit everytime it updates so it is consistent with the points given by the matlab script.
+
+servoJ gives us the most precise motions, but is a bit laggy on the wrong computer... Throw is consistent.
+
+With either commands timing of release is inconsistent. Sometimes it throws too early, sometimes too late, sometimes perfectly. - But totally inconsistent.
+
+We hardcoded the release of the gripper, to throw 100 steps before the end of the vector. We always have a 126 steps vector on our throw when we use a 0.008 time step.
+This is not the best way and should be a timevalue, but the inconsistent timing of the release made it useless no matter what we did and we finished the project here on the last day of the project.
+
+We will write more about the difference in evaluation.
+
+
+

@@ -64,6 +64,11 @@
 \maketitle
 \thispagestyle{empty}
 \setcounter{tocdepth}{3} 
+\newpage
+%Abstract section
+\begin{abstract}
+    \input{sections/abstract.tex}
+\end{abstract}
 
 \newpage
 \thispagestyle{empty}
@@ -79,5 +84,55 @@
 %\section{$TITLE$}
 %\input{sections\$YOUR_PAGE$}
 
+\section{Introduction} 
+\input{sections/Introduction.tex}
+\newpage
+
+\section{System Overview} 
+\input{sections/SystemOverview.tex}
+\newpage
+
+\section{Robot Calibration} 
+\input{sections/RobotCalibration.tex}
+\newpage
+
+\section{Controlling the Robot \& Gripper} 
+\input{sections/RobotControl.tex}
+\newpage
+
+\section{Camera Vision} 
+\input{sections/CameraVision.tex}
+\newpage
+
+\section{Projectile Trajectory} 
+\input{sections/TrajectoryCalculation.tex}
+\newpage
+
+\section{Kinematics} 
+\input{sections/Kinematics.tex}
+\newpage
+
+\section{Graphical User Interface} 
+\input{sections/GUI.tex}
+\newpage
+
+\section{Implementation} 
+\input{sections/Implementation.tex}
+\newpage
+
+\section{Evaluation} 
+\input{sections/Tests.tex}
+\newpage
+
+\section{Discussion} 
+\input{sections/Discussion.tex}
+\newpage
+
+\section{Conclusion} 
+\input{sections/Conclusion.tex}
+\newpage
+
+\nocite{*}
+\printbibliography
 
 \end{document}

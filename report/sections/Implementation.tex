@@ -1,0 +1,60 @@
+\label{sec:Implementation}
+
+\subsection{Integration}
+The GUI is tightly linked with the robotControl, so as we came forward and the GUI was almost done, robotControl and GUI teamed up.
+The GUI runs primarily in the main loop, QT is being given the main loop at app.exec(). 
+We setup the GUI webpage in the webPage class and the rest in at appSetup.cpp.
+Because Qt disallow GUI outside the main loop, you have to use signals to deliver the message which is why there is a MsgSender class.
+To use the MsgSender class you have to add a link to the main thread, again to run it in the main thread, which is being done in the appSetup.cpp which is setup and exit script.
+
+The main implementation happens in the QThread class that runs a loop, which control the robot. The website sends signals from the main thread that the robot thread will use and answer.
+
+To make the website work in robotControl, the URThreadControl loop really runs the entire function of the application. 
+It is here we tell the robot to run the commands, the website has given. It is here we tell the website, where it is the robot is at right now, so you can create commands for later use.
+It is the core of the program. Here it is parted up into two different loops. Either we run in auto, where we ask cameravision where we want to go or we manually create commands that the robot can follow. 
+-Later the automatic commands was added to manually also.
+
+Because everyone else in the group works in world coordinates and the robot does not, a kinematics library has been created to work between them along with the WORLD\_TO\_BASE and BASE\_TO\_WORLD transformation matrix. 
+This lib is also used to change between UR axis angles and transformation matrixes. This is how we calculate where we are in the world coordinates and where we need to go.
+
+The Vision part is copied directly into main and the videofeed transfered to the webpage GUI through another thread.
+
+The matlab script, which runs the trajectory calculations, is integrated into a throw command in robotControl. \- So when called, It will calculate trajectories and follow them.
+
+We do run quite alot of threads which can and do cause quite some issues. This was of cause not an issue while the programs were seperate. The issue is that we need to connect different variables To fix this we do use quite alot of mutexes and atomics. These make sure that no thread can write to a thread being used by another thread.
+This was all needed to make an application that would be responsive.
+RobotControl is always being called from the browser to tell which commands to run. RobotControl launches another thread when shooting to make sure it has the highest priority, to make the throw move without stops. The throw also launches a thread more to make sure that the gripper releases at the right time.
+Beyond that, the vision tells the browser what image to show, while at the same time finding different objects in the image. The image in the browser also has its own thread, because it requires mjpeg streamer, which is a library to stream the vision.
+
+This all together creates a responsive app that just works!
+
+Even though it is a little illigal, there are two gotos in this loop. One restarts the loop if you have asked to "save and reconnect". 
+This exits everything in this loop and saves the commands you are following. Then it reboots the loop from top.
+Another goto is there to exit the deep loops. When it is not enough just to break out of a loop. This is for example when you are searching for a ball and wanting to stop the search. 
+This would only break out into the normal loop and we would continue and move to a ball we did not find.
+These could be solved in other ways. But i believe this was the easiest and best solution to this problem.
+
+
+\subsection{Usage}
+
+\begin{itemize}
+\item In the control panel on the left on top, there is a slider. 
+This slider desides whether you are running in automatic mode or in manual mode.
+if you are in auto you can only control play, pause and stop.
+if not, you can use the rest of the control panel. You can add elements to the loop and start, pause and stop the loop.
+These elements are "Set position", "Gripper open", "Gripper close", "Find ball" and "Add shoot".
+Along with that, there is a "Get position" to get the coordinates in UR axis angles and "Save and reconnect". 
+
+\begin{itemize}
+\item With "Set position", you can set a position, you have moved it to on the teachpendent. 
+\item "Gripper open" and "Gripper close" tells the loop to open and close the gripper.
+\item "Find ball" is the newest member function. It tells to get the cameravision to find the ball where it is. This changes every loop. So the function does not set any target points directly.
+\item "Add shoot" uses the coordinates you have picked on the table. Click on the table on the videofeed, to select a target.
+\end{itemize}
+
+\item In the right top corner there is a shutdown button. This button can be used to safely quit all threads and exit.
+
+\item If you close the tab in error, you can find in the taskbar, the logo being presented. By double clicking on the logo, you will be able to open the website.
+If you right click, you can shut down the program safely.
+
+\end{itemize}

@@ -1,0 +1,104 @@
+\label{sec:camera}
+
+In this project, an essential part of the problem was to find objects using a camera.
+This was done using a Basler camera of the model acA 1440-220uc, which was outfitted with a C125-0418-5M lens.
+
+To communicate with the camera, we used the Basler Pylon Camera Software Suite (Basler Pylon SDK).
+This allowed us to interact with the settings stored in the camera, and get an image output.
+This image was distorted, and we therefore needed to undistort it.
+With an undistorted image, we could then find the coordinates of objects in the image.
+For communicating points on the table, we defined world frame to span from a specific corner on the worktable.
+Therefore, we also needed to make a homography to transform the coordinates in camera frame to world frame.
+The coordinates of objects in the image could then be transformed into world frame, so they could be used by the rest of the program.
+
+\subsection{Camera Calibration}
+First, we needed a picture from the camera, which we can process and extract the necessary information from.
+To achieve this, we first established a connection with the camera using "Pylon Viewer", a program included in the Basler Pylon SDK.
+The Basler Pylon SDK also includes the library, which we utilised to control the camera directly from our program.
+Using the pylon library, we were able to adjust the settings of the camera to make the image properly readable to a person. 
+
+A computer program can in some applications, depending on its way of implementation, function partially or fully, even with an image not readable by humans.
+This is because of the nature of image processing, as it relies on the data stored in the individual pixels.
+The change from pixel to pixel is then analysed in different ways to pick up patterns and defining factors. 
+The way we humans understand what we see, is done through pattern recognition, and rely less on the specific data of indivual "pixels".
+
+Because of this, we had to test different configurations of the camera, so the image output would represent the real world as accurately as possible.
+This was done through trial and error, and relied on human perception, so an element of human error is to be expected. 
+This should not cause any major issues though, since the features of the image stays relative, and therefore are not changed through the camera configuration.
+The output image could now be shown to the user, as part of our GUI, or for troubleshooting the output of our object detection. 
+
+With the camera configured, we could then shift our focus to camera calibration.
+This was done using the OpenCV library, which includes a number of functions, that simplify the undistortion and transformation of our images.
+First, we took 30 pictures using the camera, where a chessboard is placed in different positions and orientations. 
+Using OpenCV we can then find the inner corners of the chessboard, and their coordinates.
+We also need the size of the squares and the number of inner corners on the chessboard, which are used to undistort the image.
+Using these data, OpenCV is then able to calculate a list of vectors and matrices, which can then be turned into two maps.
+These maps are offsets in the x and y direction, which we can then use to remap the distorted image, thereby undistorting it.
+
+With the undistorted image, we now needed to make a homography, which could be used to transform coordinates between the camera frame and world frame.
+To do this, we first made a simple homography using 4 coordinates in world frame, and the corresponding 4 coordinates in camera frame.
+We then tested this homography by transforming a set of coordinates between camera frame and world frame.
+These transformed coordinates were then compared to the corresponding coordinates, meassured directly in world frame.
+This showed an offset of up to half a centimeter, depending on position in the image.
+This offset may not fully ruin the functionality of the program by itself, but all the errors throughout the system can stack up, which is a major concern.
+To ensure the best accuracy across the whole system, it is essential to reduce inaccuracies and calibration errors, wherever possible. 
+
+As we had only used 4 sets of coordinates to make the homography, and got a suboptimal homography in return, we decided to extend and improve our dataset.
+Instead of relying solely on human accuracy, we decided to add feature detection as part of the process.
+This way, we were able to remove some of the human inaccuracies, and enabled us to extend our dataset considerably.
+This was done by using the circle Hough transform, which made us able to find the holes located in the table. 
+We assume that the holes are placed in a flat plane with a constant distance between them.
+This is because the table shows signs of being cnc milled, which is a manufacturing process with relatively high accuracy, which we hope will be sufficient.
+
+Using the circle Hough transform, we were able to determine the coordinates of the holes in the table.
+We then set up a list of coordinates, resembling the real world coordinates of the holes.
+The circle Hough transform returns more circle coordinates, than there are holes in the table, and we therefore needed to sort the output before use.
+This was done using the first homography, which was calculated from 4 hand-picked coordinates.
+Using this homography, we transformed the real world coordinates of the holes into the image frame.
+With the world coordinates transformed into the image frame, we could then compare them to the image coordinates of the holes.
+We then used the coordinates with the smallest offset to create a new homography.
+This homography could then be used like the first one, while being more accurate to the plane.
+Using these homographies recursively gives us a final homography with less human inaccuracy than the homography from human input.
+
+During testing it was discovered, that there was an offset between the real world coordinates, and the coordinates returned, when converting from a point in the image to a point in world frame. 
+By obtaining data from different areas of the table, we could deduce, that the offset increases as we travel away from a specific point.
+Another important detail is, that this increase was growing, so as we moved away from the central point, not only did the offset increase, but it increased faster the further away the point was.
+A linear function would therefore not be sufficient in correcting our coordinates.
+Another idea for correcting these coordinates would be to meassure a set of data points with their world coordinates and the coordinates seen from our camera, and use these for interpolation.
+We decided against interpolation, as the coordinates seen from the camera, could vary depending on what pixel the hough transform chose as the center point.
+These small variations would have an imediate effect on the output coordinates, as interpolation only used the points around the desired coordinates.
+At first we did not consider a different homography to allign our image coordinates with their relative world coordinates, so polynomial functions seemed like the best option.
+We therefore decided to use polynomial functions, as we would then be able to encorporate all the data points and hopefully correct our coordinates.
+
+To calculate the functions for converting our coordinates with offset into the correct world coordinates, we detected the ball in 64 places in a 8x8 grid of points with 10cm between the points in the x- and y-direction.
+This data was then compared to the expected coordinates for each point, which was then used to create the fourth degree polynomial functions for the offset in the x- and y-direction. 
+Originally we wanted to use second degree polynomials to convert the coordinates, but due to some issues when calculating the functions, the second degree polynomials created nonsensical results. 
+Because of this, we decided to use the fourth degree polynomial, which did not cause issues, and therefore integrated it into the program.
+Only later, when we had decided to stop development, was the issue resolved, so a second degree polynomial could be calculated.
+We decided to stay with the fourth degree polynomial anyways, as this was the one used during testing, and therefore the one with the most data backing its validity.
+
+
+\subsection{Object Detection}
+Our object detection is split into two parts.
+One part is to find the coordinates of the throwable object, in this case our 3D-printed ball.
+The other part is for finding the middle of the target box, which we have also 3D-printed.
+
+\subsubsection{Finding throwable object}
+When the first iteration of our object detection was created, only the throwable object was meant to be found with machine vision. 
+This was early on in the semester, where we were only introduced to specific tools through the "Machine Vision" course.
+Having limited knowledge about the OpenCV library, and its extensive capabilities, we created the first iteration of our object detection with a simple form of threshholding, and later found connected pixels.
+This was done by converting the image to HSV, which is more intuitive to people, and then choosing threshholds that seperate our throwable object from the background, creating a binary image.
+All connected pixels of either 1 or 0 are then given the same nubmer as all the pixels they are connected to, which posess the same binary value.
+This effectively creates individual objects, which fill up a specific area in the image. 
+By then taking the average x- and y-values of each objects, we found the centers of the objects.
+
+The issue with this approach is, that if two objects touch each other,their binary "shadow" will merge and contain all the area between the two objects, therefore outputting the center of the merged object.
+Luckily we were later introduced to the Hough transform, which is a way to find simple features in an image.
+By using the Hough circle transform, we were able to find our objects while avoiding the merging of objects.
+The coordinates can from here be transformed from image coordinates into the desired coordinates format, which can then be passed on to the rest of the program.
+
+\subsubsection{Finding target}
+The task of finding the target box, was done by going back to the first idea used, when we started making the object detection. 
+Our target is square, so the Hough circle transform was out of the question, and the Hough transform for lines could be tricky to apply, as most objects in the image already consist of lines.
+Therefore we ended up converting the image to HSV, finding threshholds manually, and labelling the different objects.
+Afterwards we could then find the centers of the objects, and output the coordiantes in a vector, in case multiple targets were in use. 
