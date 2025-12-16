@@ -1,0 +1,83 @@
+\documentclass[10pt]{article}
+%Have "Packages.tex" in a folder called "Includes"
+%Have "SDU_logo.png" in a folder called "Figures"
+%Have "Appendix0.tex" in a folder called "Appendix"
+%Have "Bibliography.tex" in a folder called "Sections"
+
+\input{includes/packages.tex}
+
+\title{
+%SDU Logo
+    \vspace{-1 cm}
+    \includegraphics[width=50mm,right]{figures/SDU_logo.png}\\
+    \vspace{1.5 cm} %Vertical space in between logo and title
+    \textbf{Semesterproject}\large\\
+     in Signals and Robot Systems\\
+     \vspace{1 cm} %Vertical space to next table
+  
+
+%Space for inserting small picture if needed
+\begin{figure}[H]
+    \centering
+    %\includegraphics[width = 9.5 cm]{figures/frontpage.png}
+    \caption{Relevant caption}
+    \label{fig:frontpage}
+\end{figure}
+
+\begin{table}[h] %Supervisor(s)
+    \centering
+    \thispagestyle{empty}
+    \begin{tabular}{l l}
+    Supervisor & Iñigo Iturrate \\
+    Hand in date & 19. dec 2025 \\
+    Institution & University of Southern Denmark\\
+    Group & 1 \\
+    
+    Study Program & Diplomingeniør i Robotteknologi
+    \end{tabular}
+        \vspace{-1 em}
+\end{table}
+
+\vspace{0,25 cm}
+ \noindent\rule{9.5 cm}{0.4pt}
+\vspace{0,25 cm} %Vertical space between supervisor(s) and participants 
+
+\begin{table}[h]
+\vspace{1 em}
+    \centering
+    \begin{tabular}{l|l}
+    Daniel Edsbjerg Holst Poulsen & \href{mailto: dpoul24@student.sdu.dk}{dpoul24@student.sdu.dk}  \\
+    Dominik Felten & \href{mailto: dofel22@student.sdu.dk}{dofel22@student.sdu.dk} \\
+    Frederik Svend Vester & \href{mailto: frves24@student.sdu.dk}{frves24@student.sdu.dk} \\
+    Mads Riis Olsen & \href{mailto: madsr16@student.sdu.dk}{madsr16@student.sdu.dk} \\
+    Magnus Hansen & \href{mailto: magnh24@student.sdu.dk}{magnh24@student.sdu.dk} \\
+    Sebastian Aksornnarong Nielsen & \href{mailto: sebni24@student.sdu.dk}{sebni24@student.sdu.dk} \\
+    \end{tabular}
+            \vspace{-3 em}
+\end{table}    
+}\small
+\date{}
+\author{}
+%End of front page setup
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\setcounter{tocdepth}{3} 
+
+\newpage
+\thispagestyle{empty}
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+%\setcounter{page}{1}
+
+
+%Sections
+
+% Indsæt sider med nedenstående format:
+%\section{$TITLE$}
+%\input{sections\$YOUR_PAGE$}
+
+
+\end{document}
